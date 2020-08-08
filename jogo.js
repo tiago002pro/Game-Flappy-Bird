@@ -1,5 +1,8 @@
 console.log('[DevSoutinho] Flappy Bird');
 
+const som_HIT = new Audio();
+som_HIT.src = './efeitos/hit.wav';
+
 const sprites = new Image();
 sprites.src = './sprites.png';
 
@@ -7,7 +10,6 @@ const canvas = document.querySelector('canvas');
 const contexto = canvas.getContext('2d'); //Jogo em 2D
 
 // [Plano de Fundo]
-
 const planoDeFundo = {
   spriteX: 390,
   spriteY: 0,
@@ -35,7 +37,7 @@ const planoDeFundo = {
       planoDeFundo.largura, planoDeFundo.altura,
     );
   }
-}
+};
 
 // [Chão]
 const chao = {
@@ -62,31 +64,63 @@ const chao = {
       chao.largura, chao.altura, //dWidyh, dheight (Dentro do canvas)
     );  
   }
-}
+};
 
-const flappyBird = { //Objeto
-  spriteX: 0,
-  spriteY: 0,
-  largura: 33,
-  altura: 24,
-  x: 10,
-  y: 50,
-  gravidade: 0.25,
-  valocidade: 0,
-  atualiza(){
-    flappyBird.valocidade = flappyBird.valocidade + flappyBird.gravidade;
-    flappyBird.y = flappyBird.y + flappyBird.valocidade;
-  },
-  desenha() {
-    contexto.drawImage(
-      sprites, //image,
-      flappyBird.spriteX, flappyBird.spriteY, //Sprite x, Sprite y, (Photoshop)
-      flappyBird.largura, flappyBird.altura, // Tamanho do recorte do Sprite (Width e Height que está no arq(Photoshop))
-      flappyBird.x, flappyBird.y, //dx, dy (Dentro do canvas)
-      flappyBird.largura, flappyBird.altura, //dWidyh, dheight (Dentro do canvas)
-    );
+function fazColisao(flappyBird, chao) {
+  const flappyBirdY = flappyBird.y + flappyBird.altura;
+  const chaoY = chao.y;
+
+  if(flappyBirdY >= chaoY) {
+    return true;
+  } 
+
+  return false;
+};
+
+function criaFlappyBird() {
+  const flappyBird = { //Objeto
+    spriteX: 0,
+    spriteY: 0,
+    largura: 33,
+    altura: 24,
+    x: 10,
+    y: 50,
+    pulo: 4.6,
+    pula() {
+      console.log('Devo pular');
+      console.log('[antes]', flappyBird.valocidade);
+      flappyBird.valocidade = - flappyBird.pulo;
+      console.log('[depois]', flappyBird.valocidade);
+    },
+    gravidade: 0.25,
+    valocidade: 0,
+    atualiza(){
+      if(fazColisao(flappyBird, chao)) {
+        console.log('Fez colisão');
+        som_HIT.play();
+
+        setTimeout(() => {
+          mudaParaTela(Telas.INICIO);
+
+        }, 500);
+        return;
+      }
+  
+      flappyBird.valocidade = flappyBird.valocidade + flappyBird.gravidade;
+      flappyBird.y = flappyBird.y + flappyBird.valocidade;
+    },
+    desenha() {
+      contexto.drawImage(
+        sprites, //image,
+        flappyBird.spriteX, flappyBird.spriteY, //Sprite x, Sprite y, (Photoshop)
+        flappyBird.largura, flappyBird.altura, // Tamanho do recorte do Sprite (Width e Height que está no arq(Photoshop))
+        flappyBird.x, flappyBird.y, //dx, dy (Dentro do canvas)
+        flappyBird.largura, flappyBird.altura, //dWidyh, dheight (Dentro do canvas)
+      );
+    }
   }
-}
+  return flappyBird;
+};
 
 //[MensagemGetReady]
 const mensagemGetReady = {
@@ -105,50 +139,62 @@ const mensagemGetReady = {
       mensagemGetReady.largura, mensagemGetReady.altura,
     );
   }
-}
+};
 
 //
 // [Telas]
 //
+const globais = {};
 let telaAtiva = {};
 function mudaParaTela(novaTela) {
   telaAtiva = novaTela;
-}
+
+  if(telaAtiva.inicializa) {
+    telaAtiva.inicializa();
+  }
+};
 
 const Telas = {
   INICIO: {
+    inicializa() {
+      globais.flappyBird = criaFlappyBird();
+    },
     desenha() {
       planoDeFundo.desenha();
       chao.desenha();
-      flappyBird.desenha();
+      globais.flappyBird.desenha();
       mensagemGetReady.desenha();
     },
-    click(){
+    click() {
       mudaParaTela(Telas.JOGO);
     },
     atualiza() {
 
     }
   }
-}
+};
 
 Telas.JOGO = {
   desenha() {
     planoDeFundo.desenha();
     chao.desenha();
-    flappyBird.desenha();
+    globais.flappyBird.desenha();
+  },
+  click() {
+    globais.flappyBird.pula();
   },
   atualiza() {
-    flappyBird.atualiza();
+    globais.flappyBird.atualiza();
   }
-}
+};
 
 function loop() {
+
   telaAtiva.desenha();
   telaAtiva.atualiza();
 
   requestAnimationFrame(loop);
-}
+};
 
 window.addEventListener('click', function() {
   if(telaAtiva.click) {

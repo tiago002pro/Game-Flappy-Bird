@@ -1,8 +1,18 @@
 console.log('[DevSoutinho] Flappy Bird');
 
 let frames = 0;
+
 const som_HIT = new Audio();
 som_HIT.src = './efeitos/hit.wav';
+
+const som_CAIU = new Audio();
+som_CAIU.src = './efeitos/caiu.wav';
+
+const som_PONTO = new Audio();
+som_PONTO.src = './efeitos/ponto.wav';
+
+const som_PULO = new Audio();
+som_PULO.src = './efeitos/pulo.wav';
 
 const sprites = new Image();
 sprites.src = './sprites.png';
@@ -107,13 +117,14 @@ function criaFlappyBird() {
       console.log('[antes]', flappyBird.valocidade);
       flappyBird.valocidade = - flappyBird.pulo;
       console.log('[depois]', flappyBird.valocidade);
+      som_PULO.play();
     },
     gravidade: 0.25,
     valocidade: 0,
     atualiza(){
       if(fazColisao(flappyBird, globais.chao)) {
         console.log('Fez colisão');
-        som_HIT.play();
+        som_CAIU.play();
 
         setTimeout(() => {
           mudaParaTela(Telas.INICIO);
@@ -265,6 +276,7 @@ function criaCanos() {
 
         if(canos.temColisaoComOFlappyBird(par)){
           console.log('Você Perdeu!');
+          som_HIT.play();
           mudaParaTela(Telas.INICIO);
         }
 
@@ -272,10 +284,6 @@ function criaCanos() {
           canos.pares.shift();
         }
       });
-
-
-
-
     }
   }
   return canos;
